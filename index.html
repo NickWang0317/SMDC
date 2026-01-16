@@ -2,9 +2,9 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- 關鍵修正：viewport 設定 cover，並處理安全區域 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>SMDC 2077 飲料轉盤</title>
-    <!-- 引入科幻風格字體 -->
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -17,7 +17,6 @@
 
         body {
             background-color: var(--bg-dark);
-            /* 網格背景模擬 */
             background-image: 
                 linear-gradient(rgba(0, 243, 255, 0.1) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(0, 243, 255, 0.1) 1px, transparent 1px);
@@ -27,39 +26,45 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            
+            /* --- 修正重點 1: 使用 dvh 確保不被工具列遮擋 --- */
             min-height: 100vh;
+            min-height: 100dvh; 
+            
+            /* --- 修正重點 2: 允許垂直捲動，防止內容死角 --- */
+            overflow-y: auto; 
+            
             margin: 0;
-            padding: 20px;
-            overflow: hidden;
-            touch-action: manipulation;
+            /* --- 修正重點 3: 底部增加緩衝空間 --- */
+            padding: 20px 20px 80px 20px; 
+            box-sizing: border-box;
             color: #fff;
+            touch-action: manipulation;
         }
 
-        /* 故障風格標題 */
         h1 {
-            font-size: 2.5rem;
+            font-size: 2.2rem;
             text-transform: uppercase;
-            position: relative;
-            text-shadow: 
-                2px 0 var(--neon-pink), 
-                -2px 0 var(--neon-blue);
-            margin-bottom: 30px;
+            text-shadow: 2px 0 var(--neon-pink), -2px 0 var(--neon-blue);
+            margin: 0 0 20px 0; /* 減少 margin */
             letter-spacing: 2px;
             text-align: center;
+            flex-shrink: 0; /* 防止標題被壓縮 */
         }
 
-        /* 轉盤外框：發光光暈 */
         .wheel-shadow {
             position: relative;
+            /* 使用相對單位，讓它更有彈性 */
             width: 360px;
             height: 360px;
+            max-width: 90vw; /* 手機上最大寬度為螢幕的 90% */
+            max-height: 90vw; /* 保持正圓 */
             border-radius: 50%;
             padding: 10px;
             background: #111;
-            box-shadow: 
-                0 0 15px var(--neon-blue),
-                0 0 30px var(--neon-pink) inset;
+            box-shadow: 0 0 15px var(--neon-blue), 0 0 30px var(--neon-pink) inset;
             border: 2px solid rgba(255,255,255,0.2);
+            flex-shrink: 0;
         }
 
         .wheel-container {
@@ -68,7 +73,6 @@
             border-radius: 50%;
             position: relative;
             overflow: hidden;
-            /* 邊框裝飾 */
             border: 4px solid var(--neon-yellow);
             box-sizing: border-box;
         }
@@ -80,25 +84,23 @@
             transition: transform 4.5s cubic-bezier(0.1, 0.8, 0.1, 1);
         }
 
-        /* 科技感指針 */
         .pointer {
             position: absolute;
-            top: -40px;
+            top: -30px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 20;
-            width: 40px;
-            height: 50px;
+            width: 30px;
+            height: 40px;
             background: var(--neon-pink);
             clip-path: polygon(50% 100%, 0% 0%, 100% 0%);
             filter: drop-shadow(0 0 10px var(--neon-pink));
         }
 
-        /* Cyberpunk 按鈕 */
         button {
-            margin-top: 50px;
-            padding: 20px 60px;
-            font-size: 1.5rem;
+            margin-top: 30px;
+            padding: 15px 50px;
+            font-size: 1.3rem;
             font-family: 'Orbitron', sans-serif;
             font-weight: 900;
             color: var(--bg-dark);
@@ -107,28 +109,17 @@
             cursor: pointer;
             text-transform: uppercase;
             letter-spacing: 2px;
-            
-            /* 切角造型 */
-            clip-path: polygon(
-                10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%
-            );
-            
-            position: relative;
+            clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
             transition: all 0.2s;
             box-shadow: 0 0 20px rgba(0, 243, 255, 0.5);
+            flex-shrink: 0;
         }
 
-        /* 按鈕 hover 效果：顏色反轉 */
         button:hover {
             background: var(--neon-pink);
             color: #fff;
             box-shadow: 0 0 30px var(--neon-pink);
-            text-shadow: 0 0 5px #fff;
             transform: scale(1.05);
-        }
-
-        button:active {
-            transform: scale(0.95);
         }
 
         button:disabled {
@@ -138,14 +129,17 @@
             cursor: not-allowed;
         }
 
-        /* 結果顯示區：類似終端機 */
         #result {
-            margin-top: 30px;
-            font-size: 1.5rem;
+            margin-top: 25px;
+            font-size: 1.4rem;
             font-weight: 700;
             color: var(--neon-green);
             text-align: center;
-            min-height: 2em;
+            min-height: 3.5em; /* 預留兩行高度 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
             text-shadow: 0 0 8px var(--neon-green);
             background: rgba(0, 20, 0, 0.6);
             padding: 10px 20px;
@@ -153,22 +147,52 @@
             border-left: 5px solid var(--neon-green);
             opacity: 0;
             transition: opacity 0.3s;
-            font-family: 'Orbitron', 'Microsoft JhengHei', sans-serif;
+            width: 80%; /* 限制寬度 */
+            max-width: 400px;
+            flex-shrink: 0;
+            margin-bottom: 20px; /* 確保底部有空間 */
         }
         
         #result.show {
             opacity: 1;
         }
 
-        #result strong {
-            color: #fff;
-            text-decoration: underline;
-        }
-
+        /* --- 修正重點 4: 針對手機螢幕的最佳化 --- */
         @media (max-width: 420px) {
-            .wheel-shadow { width: 300px; height: 300px; }
-            h1 { font-size: 1.8rem; }
-            button { padding: 15px 40px; font-size: 1.2rem; }
+            h1 { 
+                font-size: 1.8rem; 
+                margin-bottom: 15px; 
+            }
+            .wheel-shadow { 
+                /* 在小螢幕上稍微縮小，留空間給按鈕和結果 */
+                width: 280px; 
+                height: 280px; 
+            }
+            button { 
+                margin-top: 25px;
+                padding: 12px 40px; 
+                font-size: 1.1rem; 
+            }
+            #result {
+                font-size: 1.1rem;
+                margin-top: 20px;
+                width: 90%;
+            }
+        }
+        
+        /* 針對超小螢幕 (如 iPhone SE) */
+        @media (max-height: 600px) {
+            .wheel-shadow {
+                width: 240px;
+                height: 240px;
+            }
+            h1 {
+                font-size: 1.5rem;
+                margin-bottom: 10px;
+            }
+            button {
+                margin-top: 15px;
+            }
         }
     </style>
 </head>
@@ -192,7 +216,6 @@
         const resultDiv = document.getElementById('result');
         const spinBtn = document.getElementById('spinBtn');
 
-        // 名單維持不變
         const shops = [
             "💧 多喝水",       
             "青山 PeakTea",   
@@ -218,14 +241,8 @@
             "龜記茗品"
         ];
 
-        // Cyberpunk 配色 (霓虹高飽和)
         const colors = [
-            "#00F3FF", // Neon Cyan
-            "#FF00FF", // Neon Pink
-            "#FFEE00", // Neon Yellow
-            "#9D00FF", // Electric Purple
-            "#FF3D00", // Bright Orange
-            "#00FF9D"  // Neon Mint
+            "#00F3FF", "#FF00FF", "#FFEE00", "#9D00FF", "#FF3D00", "#00FF9D"
         ];
 
         let currentRotation = 0;
@@ -255,8 +272,6 @@
             const arc = Math.PI * 2 / shops.length;
             
             ctx.clearRect(0, 0, dim.width, dim.height);
-
-            // 繪製背景圓
             ctx.beginPath();
             ctx.arc(dim.centerX, dim.centerY, dim.radius, 0, Math.PI * 2);
             ctx.fillStyle = "#000";
@@ -269,12 +284,8 @@
                 ctx.moveTo(dim.centerX, dim.centerY);
                 ctx.arc(dim.centerX, dim.centerY, dim.radius, angle, angle + arc);
                 ctx.lineTo(dim.centerX, dim.centerY);
-                
-                // 霓虹填色
                 ctx.fillStyle = colors[i % colors.length];
                 ctx.fill();
-                
-                // 黑色分隔線 (增加對比)
                 ctx.strokeStyle = "#050510";
                 ctx.lineWidth = 3;
                 ctx.stroke();
@@ -283,14 +294,10 @@
                 ctx.translate(dim.centerX, dim.centerY);
                 ctx.rotate(angle + arc / 2);
                 ctx.textAlign = "right";
-                
-                // 文字樣式：黑色加粗，確保在霓虹色上清晰
                 ctx.fillStyle = "#000"; 
                 
-                // 特殊選項強調
                 if (shops[i].includes("青山") || shops[i].includes("多喝水")) {
                     ctx.font = "900 14px 'Microsoft JhengHei', sans-serif";
-                    // 如果是特殊選項，給它加個白色陰影讓它更突出
                     ctx.shadowColor = "white";
                     ctx.shadowBlur = 0;
                 } else {
@@ -298,13 +305,14 @@
                     ctx.shadowBlur = 0;
                 }
                 
-                ctx.fillText(shops[i], dim.radius - 20, 5);
+                // 動態調整文字半徑，避免小螢幕文字超出
+                const textRadius = dim.radius - (dim.radius * 0.15); 
+                ctx.fillText(shops[i], textRadius, 5);
                 ctx.restore();
             }
             
-            // 中心裝飾圈
             ctx.beginPath();
-            ctx.arc(dim.centerX, dim.centerY, 20, 0, Math.PI*2);
+            ctx.arc(dim.centerX, dim.centerY, dim.radius * 0.15, 0, Math.PI*2);
             ctx.fillStyle = "#050510";
             ctx.fill();
             ctx.strokeStyle = "#00F3FF";
@@ -337,17 +345,19 @@
                 if (index >= shops.length) index = 0;
                 const winner = shops[index];
                 
-                // Cyberpunk 風格的結果訊息
-                let message = `> TARGET ACQUIRED: [ <strong>${winner}</strong> ]`;
+                let message = `> TARGET: <br> <span style="font-size:1.4em; color:white;">${winner}</span>`;
                 
                 if (winner.includes("多喝水")) {
-                    message = `> SYSTEM ALERT: <strong>${winner}</strong> <br> // STAY HYDRATED`;
+                    message = `> SYSTEM ALERT: <br> <span style="font-size:1.4em; color:white;">${winner}</span> <br> // STAY HYDRATED`;
                 } else if (winner.includes("青山")) {
-                    message = `> PRIORITY TARGET: <strong>${winner}</strong> <br> // EXCELLENT CHOICE`;
+                    message = `> PRIORITY: <br> <span style="font-size:1.4em; color:white;">${winner}</span> <br> // GOOD CHOICE`;
                 }
 
                 resultDiv.innerHTML = message;
                 resultDiv.classList.add('show');
+                
+                // 自動捲動到結果 (如果結果被遮住)
+                resultDiv.scrollIntoView({ behavior: "smooth", block: "center" });
 
             }, 4500);
         }
