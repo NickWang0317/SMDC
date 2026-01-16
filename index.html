@@ -2,7 +2,6 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <!-- 關鍵修正：viewport 設定 cover，並處理安全區域 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>SMDC 2077 飲料轉盤</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
@@ -17,28 +16,24 @@
 
         body {
             background-color: var(--bg-dark);
+            /* 網格背景 */
             background-image: 
-                linear-gradient(rgba(0, 243, 255, 0.1) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 243, 255, 0.1) 1px, transparent 1px);
-            background-size: 30px 30px;
+                linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
             font-family: 'Orbitron', 'Microsoft JhengHei', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            
-            /* --- 修正重點 1: 使用 dvh 確保不被工具列遮擋 --- */
+            /* 保持垂直置中，但允許捲動 */
+            justify-content: flex-start; 
             min-height: 100vh;
-            min-height: 100dvh; 
-            
-            /* --- 修正重點 2: 允許垂直捲動，防止內容死角 --- */
-            overflow-y: auto; 
-            
+            min-height: 100dvh;
             margin: 0;
-            /* --- 修正重點 3: 底部增加緩衝空間 --- */
-            padding: 20px 20px 80px 20px; 
+            padding: 40px 20px 80px 20px; /* 頂部增加 padding */
             box-sizing: border-box;
             color: #fff;
+            overflow-y: auto;
             touch-action: manipulation;
         }
 
@@ -46,25 +41,49 @@
             font-size: 2.2rem;
             text-transform: uppercase;
             text-shadow: 2px 0 var(--neon-pink), -2px 0 var(--neon-blue);
-            margin: 0 0 20px 0; /* 減少 margin */
-            letter-spacing: 2px;
+            /* 關鍵修正：增加底部邊距，讓箭頭不撞到標題 */
+            margin: 0 0 50px 0; 
+            letter-spacing: 3px;
             text-align: center;
-            flex-shrink: 0; /* 防止標題被壓縮 */
+            flex-shrink: 0;
+            position: relative;
+        }
+        
+        /* 標題裝飾線 */
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: var(--neon-yellow);
+            box-shadow: 0 0 10px var(--neon-yellow);
+        }
+
+        .wheel-wrapper {
+            position: relative;
+            /* 這是包含箭頭和轉盤的容器 */
+            margin-bottom: 20px;
+            flex-shrink: 0;
         }
 
         .wheel-shadow {
             position: relative;
-            /* 使用相對單位，讓它更有彈性 */
-            width: 360px;
-            height: 360px;
-            max-width: 90vw; /* 手機上最大寬度為螢幕的 90% */
-            max-height: 90vw; /* 保持正圓 */
+            width: 340px;
+            height: 340px;
+            max-width: 85vw;
+            max-height: 85vw;
             border-radius: 50%;
-            padding: 10px;
-            background: #111;
-            box-shadow: 0 0 15px var(--neon-blue), 0 0 30px var(--neon-pink) inset;
-            border: 2px solid rgba(255,255,255,0.2);
-            flex-shrink: 0;
+            padding: 8px;
+            background: #000;
+            /* 外光暈稍微收斂，更精緻 */
+            box-shadow: 
+                0 0 10px rgba(0, 243, 255, 0.3), 
+                0 0 20px rgba(255, 0, 255, 0.2) inset;
+            border: 1px solid rgba(255,255,255,0.15);
+            z-index: 1;
         }
 
         .wheel-container {
@@ -73,7 +92,7 @@
             border-radius: 50%;
             position: relative;
             overflow: hidden;
-            border: 4px solid var(--neon-yellow);
+            border: 2px solid var(--neon-yellow);
             box-sizing: border-box;
         }
 
@@ -84,17 +103,47 @@
             transition: transform 4.5s cubic-bezier(0.1, 0.8, 0.1, 1);
         }
 
+        /* --- 全新設計：懸浮 HUD 指針 --- */
         .pointer {
             position: absolute;
-            top: -30px;
+            /* 讓指針懸浮在轉盤正上方，不接觸 */
+            top: -25px; 
             left: 50%;
             transform: translateX(-50%);
-            z-index: 20;
-            width: 30px;
+            z-index: 10;
+            width: 40px;
             height: 40px;
-            background: var(--neon-pink);
-            clip-path: polygon(50% 100%, 0% 0%, 100% 0%);
-            filter: drop-shadow(0 0 10px var(--neon-pink));
+            /* 移除實心背景，改用倒三角形狀的 Neon 光影 */
+            background: transparent;
+            filter: drop-shadow(0 0 5px var(--neon-pink));
+        }
+
+        /* 繪製一個倒三角 HUD */
+        .pointer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 25px solid var(--neon-pink);
+        }
+
+        /* 增加一個中心的小亮點，像瞄準心 */
+        .pointer::after {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 2px;
+            box-shadow: 0 0 10px var(--neon-pink);
         }
 
         button {
@@ -109,17 +158,22 @@
             cursor: pointer;
             text-transform: uppercase;
             letter-spacing: 2px;
-            clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+            /* 更俐落的切角 */
+            clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
             transition: all 0.2s;
-            box-shadow: 0 0 20px rgba(0, 243, 255, 0.5);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
             flex-shrink: 0;
         }
 
         button:hover {
             background: var(--neon-pink);
             color: #fff;
-            box-shadow: 0 0 30px var(--neon-pink);
-            transform: scale(1.05);
+            box-shadow: 0 0 25px var(--neon-pink);
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: scale(0.98);
         }
 
         button:disabled {
@@ -127,72 +181,51 @@
             color: #777;
             box-shadow: none;
             cursor: not-allowed;
+            transform: none;
         }
 
         #result {
             margin-top: 25px;
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             font-weight: 700;
             color: var(--neon-green);
             text-align: center;
-            min-height: 3.5em; /* 預留兩行高度 */
+            min-height: 60px;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-direction: column;
             text-shadow: 0 0 8px var(--neon-green);
-            background: rgba(0, 20, 0, 0.6);
-            padding: 10px 20px;
-            border: 1px solid var(--neon-green);
-            border-left: 5px solid var(--neon-green);
+            /* 改為上下邊框風格 */
+            border-top: 1px solid var(--neon-green);
+            border-bottom: 1px solid var(--neon-green);
+            background: linear-gradient(90deg, transparent 0%, rgba(0, 255, 10, 0.1) 50%, transparent 100%);
+            padding: 15px 0;
+            width: 100%;
+            max-width: 400px;
             opacity: 0;
             transition: opacity 0.3s;
-            width: 80%; /* 限制寬度 */
-            max-width: 400px;
             flex-shrink: 0;
-            margin-bottom: 20px; /* 確保底部有空間 */
         }
         
         #result.show {
             opacity: 1;
         }
 
-        /* --- 修正重點 4: 針對手機螢幕的最佳化 --- */
+        /* 手機適配 */
         @media (max-width: 420px) {
-            h1 { 
-                font-size: 1.8rem; 
-                margin-bottom: 15px; 
-            }
-            .wheel-shadow { 
-                /* 在小螢幕上稍微縮小，留空間給按鈕和結果 */
-                width: 280px; 
-                height: 280px; 
-            }
-            button { 
-                margin-top: 25px;
-                padding: 12px 40px; 
-                font-size: 1.1rem; 
-            }
-            #result {
-                font-size: 1.1rem;
-                margin-top: 20px;
-                width: 90%;
-            }
+            h1 { font-size: 1.8rem; margin-bottom: 45px; }
+            .wheel-shadow { width: 280px; height: 280px; }
+            button { margin-top: 20px; font-size: 1.1rem; }
+            #result { font-size: 1.1rem; }
         }
         
-        /* 針對超小螢幕 (如 iPhone SE) */
-        @media (max-height: 600px) {
-            .wheel-shadow {
-                width: 240px;
-                height: 240px;
-            }
-            h1 {
-                font-size: 1.5rem;
-                margin-bottom: 10px;
-            }
-            button {
-                margin-top: 15px;
-            }
+        /* 針對短螢幕手機 */
+        @media (max-height: 660px) {
+            body { padding-top: 20px; justify-content: flex-start; }
+            h1 { margin-bottom: 35px; font-size: 1.6rem; }
+            .wheel-shadow { width: 250px; height: 250px; }
+            .pointer { top: -20px; } /* 調整指針位置 */
         }
     </style>
 </head>
@@ -200,10 +233,13 @@
 
     <h1>SMDC <span style="color:var(--neon-yellow)">2077</span></h1>
     
-    <div class="wheel-shadow">
+    <!-- 新增一層 wrapper 定位用 -->
+    <div class="wheel-wrapper">
         <div class="pointer"></div>
-        <div class="wheel-container">
-            <canvas id="wheel"></canvas>
+        <div class="wheel-shadow">
+            <div class="wheel-container">
+                <canvas id="wheel"></canvas>
+            </div>
         </div>
     </div>
 
@@ -241,8 +277,14 @@
             "龜記茗品"
         ];
 
+        // 稍微調暗一點霓虹色，增加 Cyberpunk 的暗黑質感
         const colors = [
-            "#00F3FF", "#FF00FF", "#FFEE00", "#9D00FF", "#FF3D00", "#00FF9D"
+            "#00C2CC", // Cyan
+            "#CC00CC", // Pink
+            "#CCBE00", // Yellow
+            "#7D00CC", // Purple
+            "#CC3100", // Orange
+            "#00CC7D"  // Mint
         ];
 
         let currentRotation = 0;
@@ -272,6 +314,8 @@
             const arc = Math.PI * 2 / shops.length;
             
             ctx.clearRect(0, 0, dim.width, dim.height);
+            
+            // 背景黑底
             ctx.beginPath();
             ctx.arc(dim.centerX, dim.centerY, dim.radius, 0, Math.PI * 2);
             ctx.fillStyle = "#000";
@@ -286,38 +330,53 @@
                 ctx.lineTo(dim.centerX, dim.centerY);
                 ctx.fillStyle = colors[i % colors.length];
                 ctx.fill();
-                ctx.strokeStyle = "#050510";
-                ctx.lineWidth = 3;
+                
+                // 分隔線改為黑色，更粗一點，更有塊狀感
+                ctx.strokeStyle = "#000";
+                ctx.lineWidth = 4;
                 ctx.stroke();
 
                 ctx.save();
                 ctx.translate(dim.centerX, dim.centerY);
                 ctx.rotate(angle + arc / 2);
                 ctx.textAlign = "right";
-                ctx.fillStyle = "#000"; 
                 
+                // 文字處理
+                ctx.fillStyle = "#000"; 
                 if (shops[i].includes("青山") || shops[i].includes("多喝水")) {
-                    ctx.font = "900 14px 'Microsoft JhengHei', sans-serif";
-                    ctx.shadowColor = "white";
-                    ctx.shadowBlur = 0;
+                    ctx.font = "900 13px 'Microsoft JhengHei', sans-serif";
+                    ctx.shadowColor = "rgba(255,255,255,0.5)";
+                    ctx.shadowBlur = 2;
                 } else {
-                    ctx.font = "bold 12px 'Microsoft JhengHei', sans-serif";
+                    ctx.font = "bold 11px 'Microsoft JhengHei', sans-serif";
                     ctx.shadowBlur = 0;
                 }
                 
-                // 動態調整文字半徑，避免小螢幕文字超出
-                const textRadius = dim.radius - (dim.radius * 0.15); 
-                ctx.fillText(shops[i], textRadius, 5);
+                // 文字往內縮一點
+                ctx.fillText(shops[i], dim.radius - 15, 4);
                 ctx.restore();
             }
             
+            // 中心裝飾 - 科技同心圓
+            // 外圈
             ctx.beginPath();
-            ctx.arc(dim.centerX, dim.centerY, dim.radius * 0.15, 0, Math.PI*2);
-            ctx.fillStyle = "#050510";
+            ctx.arc(dim.centerX, dim.centerY, dim.radius * 0.18, 0, Math.PI*2);
+            ctx.fillStyle = "#000";
             ctx.fill();
-            ctx.strokeStyle = "#00F3FF";
+            ctx.strokeStyle = varCSS('--neon-blue');
             ctx.lineWidth = 2;
             ctx.stroke();
+            
+            // 內圈亮點
+            ctx.beginPath();
+            ctx.arc(dim.centerX, dim.centerY, dim.radius * 0.05, 0, Math.PI*2);
+            ctx.fillStyle = varCSS('--neon-pink');
+            ctx.fill();
+        }
+        
+        // 輔助函式：取得 CSS 變數顏色
+        function varCSS(name) {
+            return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
         }
 
         function spin() {
@@ -345,24 +404,27 @@
                 if (index >= shops.length) index = 0;
                 const winner = shops[index];
                 
-                let message = `> TARGET: <br> <span style="font-size:1.4em; color:white;">${winner}</span>`;
+                let message = `TARGET: <span style="font-size:1.3em; color:#fff; text-shadow:0 0 5px #fff">${winner}</span>`;
                 
                 if (winner.includes("多喝水")) {
-                    message = `> SYSTEM ALERT: <br> <span style="font-size:1.4em; color:white;">${winner}</span> <br> // STAY HYDRATED`;
+                    message = `SYSTEM ALERT: <span style="font-size:1.3em; color:#fff">${winner}</span> // HYDRATION REQUIRED`;
                 } else if (winner.includes("青山")) {
-                    message = `> PRIORITY: <br> <span style="font-size:1.4em; color:white;">${winner}</span> <br> // GOOD CHOICE`;
+                    message = `PRIORITY: <span style="font-size:1.3em; color:#fff">${winner}</span> // OPTIMAL CHOICE`;
                 }
 
                 resultDiv.innerHTML = message;
                 resultDiv.classList.add('show');
                 
-                // 自動捲動到結果 (如果結果被遮住)
-                resultDiv.scrollIntoView({ behavior: "smooth", block: "center" });
+                resultDiv.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
             }, 4500);
         }
 
-        drawWheel();
+        // 重新繪製確保顏色正確載入
+        setTimeout(() => {
+            dim = resizeCanvas();
+            drawWheel();
+        }, 100);
 
         window.addEventListener('resize', () => {
             dim = resizeCanvas();
